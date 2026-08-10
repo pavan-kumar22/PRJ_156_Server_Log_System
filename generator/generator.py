@@ -632,14 +632,184 @@ def select_event(
 
 
 def build_log_record() -> dict[str, Any]:
-    """Build one complete structured log record."""
+    """Build one complete structured log record with consistent fields."""
     service = random.choice(SERVICES)
 
-    endpoint, method = random.choice(
-        SERVICE_CONFIG[service]["endpoints"]
-    )
-
     level, message = select_event(service)
+
+    endpoint_map: dict[str, dict[str, tuple[str, str]]] = {
+        "student-portal": {
+            "Student profile": (
+                "/api/v1/students/profile",
+                "GET",
+            ),
+            "Student application": (
+                "/api/v1/students/apply",
+                "POST",
+            ),
+            "Certificate": (
+                "/api/v1/students/certificates",
+                "GET",
+            ),
+            "Unauthorized access": (
+                "/api/v1/students/profile",
+                "GET",
+            ),
+            "Access denied": (
+                "/api/v1/students/profile",
+                "GET",
+            ),
+            "database": (
+                "/api/v1/students/apply",
+                "POST",
+            ),
+            "portal dependency": (
+                "/api/v1/students/profile",
+                "GET",
+            ),
+        },
+        "payment-gateway": {
+            "Payment transaction": (
+                "/api/v1/payments/initiate",
+                "POST",
+            ),
+            "Payment status": (
+                "/api/v1/payments/status",
+                "GET",
+            ),
+            "Payment gateway": (
+                "/api/v1/payments/status",
+                "GET",
+            ),
+            "Payment database": (
+                "/api/v1/payments/initiate",
+                "POST",
+            ),
+            "fraudulent payment": (
+                "/api/v1/payments/initiate",
+                "POST",
+            ),
+            "Suspicious payment": (
+                "/api/v1/payments/initiate",
+                "POST",
+            ),
+        },
+        "faculty-verification-engine": {
+            "Faculty verification": (
+                "/api/v1/faculty/verify",
+                "POST",
+            ),
+            "Faculty application": (
+                "/api/v1/faculty/applications",
+                "GET",
+            ),
+            "faculty verification database": (
+                "/api/v1/faculty/verify",
+                "POST",
+            ),
+            "Faculty verification service": (
+                "/api/v1/faculty/verify",
+                "POST",
+            ),
+            "Unauthorized faculty": (
+                "/api/v1/faculty/verify",
+                "POST",
+            ),
+        },
+        "approval-workflow-service": {
+            "Approval request submitted": (
+                "/api/v1/approvals/submit",
+                "POST",
+            ),
+            "Approval request status": (
+                "/api/v1/approvals/status",
+                "GET",
+            ),
+            "Approval workflow": (
+                "/api/v1/approvals/approve",
+                "POST",
+            ),
+            "Unauthorized approval": (
+                "/api/v1/approvals/approve",
+                "POST",
+            ),
+        },
+        "authentication-service": {
+            "authentication": (
+                "/api/v1/auth/login",
+                "POST",
+            ),
+            "Authentication token": (
+                "/api/v1/auth/refresh",
+                "POST",
+            ),
+            "authentication request": (
+                "/api/v1/auth/login",
+                "POST",
+            ),
+            "Authentication database": (
+                "/api/v1/auth/login",
+                "POST",
+            ),
+            "Unauthorized administrative": (
+                "/api/v1/auth/login",
+                "POST",
+            ),
+            "brute force": (
+                "/api/v1/auth/login",
+                "POST",
+            ),
+            "Invalid authentication token": (
+                "/api/v1/auth/verify-token",
+                "POST",
+            ),
+        },
+        "document-service": {
+            "Document uploaded": (
+                "/api/v1/documents/upload",
+                "POST",
+            ),
+            "Document downloaded": (
+                "/api/v1/documents/download",
+                "GET",
+            ),
+            "Document verification": (
+                "/api/v1/documents/verify",
+                "POST",
+            ),
+            "Suspicious repeated document": (
+                "/api/v1/documents/download",
+                "GET",
+            ),
+            "Unauthorized document": (
+                "/api/v1/documents/download",
+                "GET",
+            ),
+            "Document storage": (
+                "/api/v1/documents/upload",
+                "POST",
+            ),
+            "Document service": (
+                "/api/v1/documents/upload",
+                "POST",
+            ),
+        },
+    }
+
+    service_endpoints = endpoint_map[service]
+
+    endpoint = None
+    method = None
+
+    for keyword, endpoint_data in service_endpoints.items():
+        if keyword.lower() in message.lower():
+            endpoint, method = endpoint_data
+            break
+
+    if endpoint is None or method is None:
+        endpoint, method = random.choice(
+            SERVICE_CONFIG[service]["endpoints"]
+        )
 
     response_time_ms, latency = generate_response_time()
 
