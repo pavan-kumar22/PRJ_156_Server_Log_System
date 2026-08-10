@@ -1,0 +1,52 @@
+data_dir = "/var/lib/vector"
+
+[sources.aicte_logs]
+type = "file"
+
+include = [
+    "/var/log/aicte/application.log"
+]
+
+read_from = "beginning"
+
+max_line_bytes = 1048576
+
+[sinks.opensearch]
+type = "elasticsearch"
+
+inputs = [
+    "aicte_logs"
+]
+
+endpoints = [
+    "http://opensearch:9200"
+]
+
+opensearch_service_type = "managed"
+api_version = "v7"
+
+mode = "bulk"
+
+bulk.index = "aicte-logs-%Y.%m.%d"
+
+healthcheck.enabled = true
+
+acknowledgements.enabled = true
+
+batch.max_events = 100
+
+batch.timeout_secs = 2
+
+buffer.type = "disk"
+
+buffer.max_size = 268435488
+
+buffer.when_full = "block"
+
+request.timeout_secs = 30
+
+request.retry_attempts = 5
+
+request.retry_backoff_secs = 2
+
+request.retry_max_duration_secs = 30
