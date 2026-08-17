@@ -1,6 +1,12 @@
 data_dir = "/var/lib/vector"
 
+
+# ============================================================
+# SOURCE: AICTE APPLICATION LOGS
+# ============================================================
+
 [sources.aicte_logs]
+
 type = "file"
 
 include = [
@@ -11,11 +17,103 @@ read_from = "beginning"
 
 max_line_bytes = 1048576
 
-[sinks.opensearch]
-type = "elasticsearch"
+
+# ============================================================
+# TRANSFORM: PARSE JSON LOG
+# ============================================================
+
+[transforms.parse_json]
+
+type = "remap"
 
 inputs = [
     "aicte_logs"
+]
+
+source = '''
+. = parse_json!(.message)
+'''
+
+
+# ============================================================
+# TRANSFORM: PREPARE LOG FOR AI CLASSIFICATION
+# ============================================================
+
+[transforms.prepare_classification]
+
+type = "remap"
+
+inputs = [
+    "parse_json"
+]
+
+source = '''
+. = {
+    "timestamp": .timestamp,
+    "uuid": .uuid,
+    "trace_id": .trace_id,
+    "request_id": .request_id,
+    "client_ip": .client_ip,
+    "response_time_ms": .response_time_ms,
+    "latency": .latency,
+    "status_code": .status_code,
+    "endpoint": .endpoint,
+    "method": .method,
+    "service": .service,
+    "host": .host,
+    "container": .container,
+    "region": .region,
+    "level": .level,
+    "message": .message,
+    "payload": .payload
+}
+'''
+
+# ============================================================
+# SINK: AI CLASSIFICATION SERVICE
+# ============================================================
+
+[sinks.classifier]
+
+type = "http"
+
+inputs = [
+    "prepare_classification"
+]
+
+uri = "http://classifier:8000/classify"
+
+method = "post"
+
+encoding.codec = "json"
+
+healthcheck.enabled = false
+
+healthcheck.uri = "http://classifier:8000/health"
+
+request.timeout_secs = 10
+
+request.retry_attempts = 5
+
+request.retry_backoff_secs = 2
+
+request.retry_max_duration_secs = 30
+
+batch.max_events = 1
+
+batch.timeout_secs = 1
+
+
+# ============================================================
+# SINK: OPENSEARCH
+# ============================================================
+
+[sinks.opensearch]
+
+type = "elasticsearch"
+
+inputs = [
+    "parse_json"
 ]
 
 endpoints = [
@@ -23,6 +121,7 @@ endpoints = [
 ]
 
 opensearch_service_type = "managed"
+
 api_version = "v7"
 
 mode = "bulk"

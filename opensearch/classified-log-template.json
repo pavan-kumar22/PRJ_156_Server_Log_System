@@ -1,0 +1,75 @@
+{
+  "index_patterns": [
+    "aicte-classified-*"
+  ],
+  "priority": 100,
+  "template": {
+    "settings": {
+      "number_of_shards": 1,
+      "number_of_replicas": 1
+    },
+    "mappings": {
+      "dynamic": true,
+      "properties": {
+        "timestamp": {
+          "type": "date"
+        },
+        "uuid": {
+          "type": "keyword"
+        },
+        "trace_id": {
+          "type": "keyword"
+        },
+        "request_id": {
+          "type": "keyword"
+        },
+        "client_ip": {
+          "type": "ip"
+        },
+        "response_time_ms": {
+          "type": "float"
+        },
+        "latency": {
+          "type": "float"
+        },
+        "status_code": {
+          "type": "integer"
+        },
+        "endpoint": {
+          "type": "keyword"
+        },
+        "method": {
+          "type": "keyword"
+        },
+        "service": {
+          "type": "keyword"
+        },
+        "host": {
+          "type": "keyword"
+        },
+        "container": {
+          "type": "keyword"
+        },
+        "region": {
+          "type": "keyword"
+        },
+        "level": {
+          "type": "keyword"
+        },
+        "message": {
+          "type": "text"
+        },
+        "category": {
+          "type": "keyword"
+        },
+        "confidence": {
+          "type": "float"
+        },
+        "payload": {
+          "type": "object",
+          "dynamic": true
+        }
+      }
+    }
+  }
+}

@@ -7,7 +7,6 @@ log file and will later be consumed by Vector.
 """
 
 from __future__ import annotations
-
 import json
 import logging
 import os
@@ -23,37 +22,28 @@ from typing import Any
 
 LOG_DIR = Path(os.getenv("LOG_DIR", "logs"))
 LOG_FILE = LOG_DIR / "application.log"
-
 LOG_LEVEL = os.getenv("LOG_LEVEL", "INFO").upper()
-
 LOG_INTERVAL_SECONDS = float(
     os.getenv("LOG_INTERVAL_SECONDS", "1")
 )
-
 MAX_LOG_FILE_BYTES = int(
     os.getenv("MAX_LOG_FILE_BYTES", str(10 * 1024 * 1024))
 )
-
 BACKUP_COUNT = int(
     os.getenv("BACKUP_COUNT", "5")
 )
-
 REGION = os.getenv(
     "REGION",
     "ap-south-1"
 )
-
 HOST = os.getenv(
     "HOST_NAME",
     socket.gethostname()
 )
-
 CONTAINER = os.getenv(
     "CONTAINER_NAME",
     "aicte-log-generator"
 )
-
-
 SERVICES = [
     "student-portal",
     "payment-gateway",
@@ -62,8 +52,6 @@ SERVICES = [
     "authentication-service",
     "document-service",
 ]
-
-
 SERVICE_CONFIG: dict[str, dict[str, Any]] = {
     "student-portal": {
         "endpoints": [
@@ -112,11 +100,8 @@ SERVICE_CONFIG: dict[str, dict[str, Any]] = {
         ],
     },
 }
-
-
 class JsonFormatter(logging.Formatter):
     """Format Python log records as single-line JSON documents."""
-
     def format(self, record: logging.LogRecord) -> str:
         """Convert a logging record into a JSON document."""
         try:
@@ -125,53 +110,37 @@ class JsonFormatter(logging.Formatter):
             log_data = {
                 "message": record.getMessage(),
             }
-
         return json.dumps(
             log_data,
             separators=(",", ":"),
             ensure_ascii=False,
         )
-
-
 def create_logger() -> logging.Logger:
     """Create and configure the rotating application logger."""
     LOG_DIR.mkdir(parents=True, exist_ok=True)
-
     logger = logging.getLogger("aicte-log-generator")
     logger.setLevel(getattr(logging, LOG_LEVEL, logging.INFO))
     logger.propagate = False
-
     if logger.handlers:
         return logger
-
     handler = RotatingFileHandler(
         filename=LOG_FILE,
         maxBytes=MAX_LOG_FILE_BYTES,
         backupCount=BACKUP_COUNT,
         encoding="utf-8",
     )
-
     handler.setFormatter(JsonFormatter())
     logger.addHandler(handler)
-
     return logger
-
-
 def generate_uuid() -> str:
     """Generate a UUID for a log event."""
     return str(uuid.uuid4())
-
-
 def generate_trace_id() -> str:
     """Generate a trace identifier."""
     return uuid.uuid4().hex
-
-
 def generate_request_id() -> str:
     """Generate a request identifier."""
     return uuid.uuid4().hex
-
-
 def generate_client_ip() -> str:
     """Generate a synthetic private client IP address."""
     return (
@@ -179,33 +148,22 @@ def generate_client_ip() -> str:
         f"{random.randint(0, 255)}."
         f"{random.randint(1, 254)}"
     )
-
-
 def generate_response_time() -> tuple[int, int]:
     """Generate latency and response time values."""
     latency = random.randint(20, 1200)
     response_time = latency + random.randint(0, 80)
-
     return response_time, latency
-
-
 def generate_status_code(level: str) -> int:
     """Generate an HTTP status code appropriate for the log level."""
     if level == "INFO":
         return random.choice([200, 200, 200, 201, 204])
-
     if level == "WARNING":
         return random.choice([200, 400, 401, 404, 408, 429])
-
     if level == "ERROR":
         return random.choice([400, 401, 403, 404, 408, 422, 500, 502, 503])
-
     return random.choice([500, 502, 503, 504])
-
-
 def generate_fake_payload(service: str) -> dict[str, Any]:
     """Generate synthetic request payload data.
-
     The payload intentionally contains fake PII-like values so that the
     PII masking stage can later be demonstrated.
     """
