@@ -1,4 +1,3 @@
-
 """Notification service for the AICTE server log observability platform."""
 
 from __future__ import annotations
@@ -8,7 +7,7 @@ import os
 from typing import Any
 
 import requests
-from fastapi import FastAPI, HTTPException
+from fastapi import FastAPI
 from pydantic import BaseModel
 
 
@@ -19,8 +18,9 @@ logging.basicConfig(
 
 LOGGER = logging.getLogger("notification")
 
-
 SLACK_WEBHOOK_URL = os.getenv("SLACK_WEBHOOK_URL", "").strip()
+
+SECURITY_ALERT_CONFIDENCE_THRESHOLD = 0.60
 
 
 app = FastAPI(
@@ -39,6 +39,35 @@ class NotificationRequest(BaseModel):
     status_code: int | None = None
     message: str
     timestamp: str | None = None
+
+
+def should_alert(event: NotificationRequest) -> tuple[bool, str]:
+    """Determine whether an event should generate an alert."""
+
+    level = (event.level or "").upper().strip()
+    category = event.category.strip()
+
+    # Rule 1: CRITICAL events always generate alerts.
+    if level == "CRITICAL":
+        return True, "critical severity"
+
+    # Rule 2: Security threats above the confidence threshold generate alerts.
+    if (
+        category == "Security Threat"
+        and event.confidence >= SECURITY_ALERT_CONFIDENCE_THRESHOLD
+    ):
+        return True, "security threat above confidence threshold"
+
+    # Rule 3: HTTP 5xx responses generate alerts.
+    if event.status_code is not None and event.status_code >= 500:
+        return True, "HTTP 5xx server error"
+
+    # Rule 4: ERROR-level events generate alerts.
+    if level == "ERROR":
+        return True, "error severity"
+
+    # INFO and WARNING do not generate Slack alerts.
+    return False, "below alert threshold"
 
 
 def build_alert_message(event: NotificationRequest) -> str:
@@ -107,16 +136,38 @@ def health() -> dict[str, str]:
 
 @app.post("/notify")
 def notify(event: NotificationRequest) -> dict[str, Any]:
-    """Receive and process an alert notification."""
+    """Receive an event and apply alert routing rules."""
+
+    should_send_alert, reason = should_alert(event)
 
     message = build_alert_message(event)
 
-    LOGGER.warning("\n%s", message)
+    if should_send_alert:
+        LOGGER.warning(
+            "\n%s\nAlert rule matched: %s",
+            message,
+            reason,
+        )
 
-    slack_sent = send_slack_notification(event)
+        slack_sent = send_slack_notification(event)
+
+    else:
+        LOGGER.info(
+            "Event did not meet alert threshold: "
+            "category=%s level=%s confidence=%.3f status_code=%s reason=%s",
+            event.category,
+            event.level,
+            event.confidence,
+            event.status_code,
+            reason,
+        )
+
+        slack_sent = False
 
     return {
         "status": "accepted",
+        "alert": should_send_alert,
+        "reason": reason,
         "category": event.category,
         "severity": event.level,
         "slack_sent": slack_sent,
