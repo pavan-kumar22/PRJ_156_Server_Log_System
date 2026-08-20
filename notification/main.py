@@ -13,7 +13,7 @@ from typing import Any
 import requests
 from fastapi import FastAPI
 from pydantic import BaseModel
-
+from notification.sanitizer import sanitize_text
 
 # ============================================================
 # LOGGING
@@ -114,18 +114,22 @@ def should_alert(event: NotificationRequest) -> tuple[bool, str]:
 # ============================================================
 
 def build_alert_message(event: NotificationRequest) -> str:
-    """Build a human-readable alert message."""
+    """Build a human-readable sanitized alert message."""
+
+    sanitized_message = sanitize_text(event.message)
+    sanitized_service = sanitize_text(event.service or "UNKNOWN")
+    sanitized_endpoint = sanitize_text(event.endpoint or "UNKNOWN")
 
     return (
         "🚨 AICTE SERVER LOG ALERT\n"
         f"Category: {event.category}\n"
         f"Confidence: {event.confidence:.3f}\n"
         f"Severity: {event.level or 'UNKNOWN'}\n"
-        f"Service: {event.service or 'UNKNOWN'}\n"
-        f"Endpoint: {event.endpoint or 'UNKNOWN'}\n"
+        f"Service: {sanitized_service}\n"
+        f"Endpoint: {sanitized_endpoint}\n"
         f"Status Code: {event.status_code or 'UNKNOWN'}\n"
         f"Timestamp: {event.timestamp or 'UNKNOWN'}\n"
-        f"Message: {event.message}"
+        f"Message: {sanitized_message}"
     )
 
 
@@ -212,10 +216,10 @@ def send_slack_notification(event: NotificationRequest) -> bool:
         "category": event.category,
         "confidence": event.confidence,
         "level": event.level or "UNKNOWN",
-        "service": event.service or "UNKNOWN",
-        "endpoint": event.endpoint or "UNKNOWN",
+        "service": sanitize_text(event.service or "UNKNOWN"),
+        "endpoint": sanitize_text(event.endpoint or "UNKNOWN"),
         "status_code": event.status_code,
-        "message": event.message,
+        "message": sanitize_text(event.message),
         "timestamp": event.timestamp or "UNKNOWN",
     }
 
