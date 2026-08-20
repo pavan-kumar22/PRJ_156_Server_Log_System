@@ -150,6 +150,72 @@ TRAINING_DATA: Final[list[tuple[str, str]]] = [
         "Performance Degradation",
     ),
     (
+        "Database query took too long to complete",
+        "Performance Degradation",
+    ),
+    (
+        "High latency detected in payment service",
+        "Performance Degradation",
+    ),
+    (
+        "API request timeout detected",
+        "Performance Degradation",
+    ),
+    (
+        "Database query response is very slow",
+        "Performance Degradation",
+    ),
+    (
+        "Payment service response latency is high",
+        "Performance Degradation",
+    ),
+    (
+        "API request took too long to respond",
+        "Performance Degradation",
+    ),
+
+    # Additional Day 18 performance examples
+    (
+        "Database query execution is taking too long",
+        "Performance Degradation",
+    ),
+    (
+        "Database operation is responding slowly",
+        "Performance Degradation",
+    ),
+    (
+        "Database response time exceeded the expected threshold",
+        "Performance Degradation",
+    ),
+    (
+        "Payment service latency is unusually high",
+        "Performance Degradation",
+    ),
+    (
+        "Payment request is taking too long to complete",
+        "Performance Degradation",
+    ),
+    (
+        "API request response is delayed",
+        "Performance Degradation",
+    ),
+    (
+        "API request took too long to complete",
+        "Performance Degradation",
+    ),
+    (
+        "Service request timeout occurred",
+        "Performance Degradation",
+    ),
+    (
+        "Service response is delayed",
+        "Performance Degradation",
+    ),
+    (
+        "High response latency detected",
+        "Performance Degradation",
+    ),
+    (
         "Unauthorized administrative access attempt detected",
         "Security Threat",
     ),
@@ -242,7 +308,53 @@ TRAINING_DATA: Final[list[tuple[str, str]]] = [
         "System Failure",
     ),
     (
+        "Application server crashed unexpectedly",
+        "System Failure",
+    ),
+    (
         "Critical system component failed",
+        "System Failure",
+    ),
+
+    # Additional Day 18 system failure examples
+    (
+        "Application server crashed",
+        "System Failure",
+    ),
+    (
+        "Application server has crashed unexpectedly",
+        "System Failure",
+    ),
+    (
+        "Backend server crashed unexpectedly",
+        "System Failure",
+    ),
+    (
+        "Server process crashed",
+        "System Failure",
+    ),
+    (
+        "Application failed to start",
+        "System Failure",
+    ),
+    (
+        "Backend service failed to start",
+        "System Failure",
+    ),
+    (
+        "Database connection was lost",
+        "System Failure",
+    ),
+    (
+        "Internal database error occurred",
+        "System Failure",
+    ),
+    (
+        "Service is unavailable",
+        "System Failure",
+    ),
+    (
+        "Critical service failure detected",
         "System Failure",
     ),
 ]
@@ -262,6 +374,7 @@ class LogClassifier:
                         strip_accents="unicode",
                         ngram_range=(1, 2),
                         sublinear_tf=True,
+                        min_df=1,
                     ),
                 ),
                 (
