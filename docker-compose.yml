@@ -110,7 +110,12 @@ services:
 
     environment:
       SLACK_WEBHOOK_URL: "${SLACK_WEBHOOK_URL:-}"
-
+      SMTP_SERVER: "${SMTP_SERVER:-}"
+      SMTP_PORT: "${SMTP_PORT:-587}"
+      SMTP_USERNAME: "${SMTP_USERNAME:-}"
+      SMTP_PASSWORD: "${SMTP_PASSWORD:-}"
+      ALERT_EMAIL_TO: "${ALERT_EMAIL_TO:-}"
+      ALERT_DEDUP_WINDOW_SECONDS: "${ALERT_DEDUP_WINDOW_SECONDS:-300}"
     restart: unless-stopped
 
     healthcheck:
