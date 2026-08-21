@@ -110,20 +110,29 @@ def save_classified_log(
 ALERT_CATEGORIES = {
     "Security Threat",
     "System Failure",
+    "Performance Degradation",
 }
 
 ALERT_LEVELS = {
     "CRITICAL",
+    "ERROR",
 }
 
 
 def should_notify(request: ClassificationRequest, category: str) -> bool:
     """Determine whether a classified event requires notification."""
 
+    # Security, system failures and performance degradation
+    # should be sent to the notification service.
     if category in ALERT_CATEGORIES:
         return True
 
+    # ERROR and CRITICAL events should generate alerts.
     if request.level and request.level.upper() in ALERT_LEVELS:
+        return True
+
+    # Any HTTP 5xx server error should generate an alert.
+    if request.status_code is not None and request.status_code >= 500:
         return True
 
     return False
@@ -154,7 +163,7 @@ def send_notification(
         response = requests.post(
             NOTIFICATION_URL,
             json=payload,
-            timeout=5,
+            timeout=15,
         )
 
         response.raise_for_status()

@@ -96,12 +96,15 @@ def should_alert(event: NotificationRequest) -> tuple[bool, str]:
         and event.confidence >= SECURITY_ALERT_CONFIDENCE_THRESHOLD
     ):
         return True, "security threat above confidence threshold"
-
-    # Rule 3: HTTP 5xx responses generate alerts.
+    # Rule 3: Performance degradation generates alerts.
+    if category == "Performance Degradation":
+        return True, "performance degradation detected"
+    
+    # Rule 4: HTTP 5xx responses generate alerts.
     if event.status_code is not None and event.status_code >= 500:
         return True, "HTTP 5xx server error"
 
-    # Rule 4: ERROR-level events generate alerts.
+    # Rule 5: ERROR-level events generate alerts.
     if level == "ERROR":
         return True, "error severity"
 

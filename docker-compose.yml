@@ -7,7 +7,7 @@ services:
     environment:
       - discovery.type=single-node
       - plugins.security.disabled=true
-      - OPENSEARCH_INITIAL_ADMIN_PASSWORD=REMOVED_SECRET
+      - OPENSEARCH_INITIAL_ADMIN_PASSWORD=${OPENSEARCH_PASSWORD}
       - OPENSEARCH_JAVA_OPTS=-Xms512m -Xmx512m
 
     ports:

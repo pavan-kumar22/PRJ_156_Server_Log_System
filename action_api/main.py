@@ -13,8 +13,8 @@ import uuid
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
-
 from fastapi import FastAPI, HTTPException
+from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 
 
@@ -23,7 +23,16 @@ app = FastAPI(
     description="Bridge between the AICTE demo portal and the log monitoring platform.",
     version="1.0.0",
 )
-
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=[
+        "http://localhost:5500",
+        "http://127.0.0.1:5500",
+    ],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
 LOG_FILE = Path("/var/log/aicte/application.log")
 
@@ -97,7 +106,53 @@ ACTION_MAP = {
             "username": "student001",
         },
     ),
+    "login_failure": lambda: base_log(
+        "authentication-service",
+        "/api/v1/auth/login",
+        "POST",
+        "CRITICAL",
+        403,
+        "Invalid login credentials detected",
+        {
+            "username": "student001",
+            "attempts": 1,
+        },
+    ),
+    "invalid_token": lambda: base_log(
+    "authentication-service",
+    "/api/v1/auth/validate-token",
+    "GET",
+    "WARNING",
+    401,
+    "Invalid or expired authentication token detected",
+    {
+        "token_status": "invalid",
+    },
+),
 
+"session_timeout": lambda: base_log(
+    "authentication-service",
+    "/api/v1/auth/session",
+    "POST",
+    "WARNING",
+    440,
+    "User session expired due to inactivity",
+    {
+        "session_status": "expired",
+    },
+),
+
+"unauthorized_access": lambda: base_log(
+    "authentication-service",
+    "/api/v1/auth/access",
+    "GET",
+    "CRITICAL",
+    403,
+    "Unauthorized access attempt detected",
+    {
+        "access_status": "denied",
+    },
+),
     "profile_update": lambda: base_log(
         "student-portal",
         "/api/v1/students/profile",
@@ -122,6 +177,71 @@ ACTION_MAP = {
             "document_type": "certificate",
         },
     ),
+    "apply_course": lambda: base_log(
+    "student-portal",
+    "/api/v1/students/apply-course",
+    "POST",
+    "INFO",
+    201,
+    "Course application submitted successfully",
+    {
+         "student_id": "STU100001",
+         "course": "Computer Science and Engineering",
+    },
+    ),
+
+    "download_certificate": lambda: base_log(
+        "student-portal",
+        "/api/v1/students/certificate",
+        "GET",
+        "INFO",
+        200,
+        "Student certificate downloaded successfully",
+        {
+            "student_id": "STU100001",
+            "certificate_type": "academic",
+        },
+    ),
+
+    "pay_fees": lambda: base_log(
+        "payment-gateway",
+        "/api/v1/payments/fees",
+        "POST",
+        "INFO",
+        200,
+        "Student fee payment completed successfully",
+        {
+            "student_id": "STU100001",
+            "amount": 5000,
+            "currency": "INR",
+        },
+    ),
+
+    "request_pending": lambda: base_log(
+        "student-portal",
+        "/api/v1/students/requests",
+        "GET",
+        "WARNING",
+        202,
+        "Student request is currently pending",
+        {
+            "student_id": "STU100001",
+            "request_status": "pending",
+        },
+    ),
+
+    "request_submitted": lambda: base_log(
+        "student-portal",
+        "/api/v1/students/requests",
+        "POST",
+        "INFO",
+        201,
+        "Student request submitted successfully",
+        {
+            "student_id": "STU100001",
+            "request_status": "submitted",
+        },
+    ),
 
     "payment_success": lambda: base_log(
         "payment-gateway",
@@ -136,7 +256,31 @@ ACTION_MAP = {
             "currency": "INR",
         },
     ),
+    "request_approved": lambda: base_log(
+    "approval-workflow-service",
+    "/api/v1/approvals/approve",
+    "POST",
+    "INFO",
+    200,
+    "Student request approved successfully",
+    {
+        "student_id": "STU100001",
+        "request_id": "REQ100001",
+    },
+),
 
+"upload_result": lambda: base_log(
+    "faculty-verification-engine",
+    "/api/v1/faculty/results/upload",
+    "POST",
+    "INFO",
+    201,
+    "Student result uploaded successfully",
+    {
+        "student_id": "STU100001",
+        "result_id": "RES100001",
+    },
+),
     # ---------------------------------------------------------
     # PERFORMANCE EVENTS
     # ---------------------------------------------------------
@@ -227,6 +371,97 @@ ACTION_MAP = {
         500,
         "Document service dependency is unavailable",
         {},
+    ),
+    # ---------------------------------------------------------
+    # ADDITIONAL DEMO EVENTS
+    # ---------------------------------------------------------
+
+    "register": lambda: base_log(
+        "authentication-service",
+        "/api/v1/auth/register",
+        "POST",
+        "INFO",
+        201,
+        "New student account registered successfully",
+        {
+            "student_id": "STU100002",
+            "role": "Student",
+        },
+    ),
+
+    "document_delete": lambda: base_log(
+        "document-service",
+        "/api/v1/documents/delete",
+        "DELETE",
+        "INFO",
+        200,
+        "Student document deleted successfully",
+        {
+            "document_id": "DOC100002",
+        },
+    ),
+    "document_download": lambda: base_log(
+    "document-service",
+    "/api/v1/documents/download",
+    "GET",
+    "INFO",
+    200,
+    "Student document downloaded successfully",
+    {
+        "document_id": "DOC100002",
+    },
+    ),
+
+    "document_invalid": lambda: base_log(
+        "document-service",
+        "/api/v1/documents/upload",
+        "POST",
+        "WARNING",
+        400,
+        "Invalid document format detected",
+        {
+            "document_type": "invalid",
+            "reason": "Unsupported file format",
+        },
+    ),
+
+    "verify_student": lambda: base_log(
+        "student-portal",
+        "/api/v1/students/verify",
+        "POST",
+        "INFO",
+        200,
+        "Student identity verified successfully",
+        {
+            "student_id": "STU100001",
+            "verification_status": "verified",
+        },
+    ),
+
+    "request_rejected": lambda: base_log(
+        "student-portal",
+        "/api/v1/students/requests",
+        "PUT",
+        "WARNING",
+        403,
+        "Student request rejected by faculty",
+        {
+            "student_id": "STU100001",
+            "request_status": "rejected",
+        },
+    ),
+
+    "generate_audit": lambda: base_log(
+        "audit-service",
+        "/api/v1/audit/generate",
+        "GET",
+        "INFO",
+        200,
+        "Security audit report generated successfully",
+        {
+            "report_type": "security",
+            "generated_by": "admin",
+        },
     ),
 }
 

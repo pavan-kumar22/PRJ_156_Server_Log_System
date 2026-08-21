@@ -35,4 +35,5 @@ opensearch/data/
 
 # Misc
 *.tmp
-*.bak
+*.bakclassified.json
+.env
