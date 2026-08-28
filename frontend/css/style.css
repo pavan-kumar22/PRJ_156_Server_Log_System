@@ -1,0 +1,46 @@
+:root {
+  --aicte-blue: #0b3d91;
+  --aicte-navy: #092b66;
+  --aicte-sky: #eaf2ff;
+  --aicte-border: #dbe4f0;
+  --aicte-ink: #17243a;
+  --aicte-muted: #64748b;
+}
+
+body { color: var(--aicte-ink); background: #f6f8fb; font-family: Inter, system-ui, -apple-system, "Segoe UI", sans-serif; }
+html.app-authenticated main > section.container:not(.role-view) { display: none !important; }
+html { scroll-behavior: auto; }
+main { animation: none; }
+@keyframes page-enter { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
+.navbar { background: var(--aicte-navy); }
+.navbar-brand { letter-spacing: .02em; }
+.hero { background: linear-gradient(135deg, var(--aicte-navy), var(--aicte-blue)); color: white; }
+.hero .eyebrow, .eyebrow { letter-spacing: .11em; text-transform: uppercase; font-size: .76rem; font-weight: 700; opacity: .8; }
+.page-shell { min-height: calc(100vh - 72px); }
+.portal-card, .service-card, .result-card, .workflow-card { border: 1px solid var(--aicte-border); box-shadow: 0 8px 24px rgba(20, 44, 82, .06); }
+.portal-card { transition: transform .18s ease, box-shadow .18s ease; will-change: transform; }
+.portal-card:hover { transform: translateY(-3px); box-shadow: 0 14px 30px rgba(20, 44, 82, .12); }
+.portal-icon { width: 52px; height: 52px; display: grid; place-items: center; border-radius: 14px; background: var(--aicte-sky); color: var(--aicte-blue); font-size: 1.4rem; }
+.service-card { height: 100%; }
+.service-card .card-body { display: flex; flex-direction: column; }
+.service-card .btn { margin-top: auto; }
+.section-label { color: var(--aicte-blue); font-weight: 700; font-size: .78rem; letter-spacing: .1em; text-transform: uppercase; }
+.status-strip { border-top: 1px solid var(--aicte-border); border-bottom: 1px solid var(--aicte-border); background: white; }
+.status-dot { display: inline-block; width: 9px; height: 9px; border-radius: 50%; background: #20a464; box-shadow: 0 0 0 4px #e2f5eb; }
+.form-control, .form-select { border-color: #cbd6e5; padding: .7rem .85rem; }
+.form-control:focus, .form-select:focus { border-color: #6d9eea; box-shadow: 0 0 0 .2rem rgba(13, 110, 253, .12); }
+.action-btn { white-space: nowrap; }
+.btn { transition: transform .15s ease, box-shadow .15s ease, background-color .15s ease, border-color .15s ease; }
+.btn:active { transform: scale(.98); }
+.role-view { animation: none; }
+@keyframes content-enter { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+.demo-panel { background: #fff; border: 1px dashed #b6c8df; }
+.result-card { background: #fff; }
+.result-card .result-icon { color: #16804b; font-size: 1.2rem; }
+.workflow-step { position: relative; flex: 1; text-align: center; }
+.workflow-step:not(:last-child)::after { content: ""; position: absolute; top: 17px; left: 62%; width: 76%; height: 2px; background: #d6e0ed; }
+.workflow-node { position: relative; z-index: 1; width: 34px; height: 34px; display: grid; place-items: center; margin: 0 auto .55rem; border-radius: 50%; background: #edf3fc; color: var(--aicte-blue); font-weight: 700; border: 2px solid #c7d8ef; }
+.workflow-step.active .workflow-node { background: var(--aicte-blue); border-color: var(--aicte-blue); color: white; }
+.table > :not(caption) > * > * { padding: .9rem .75rem; }
+footer { background: #fff; border-top: 1px solid var(--aicte-border); }
+@media (max-width: 767.98px) { .hero { text-align: center; } .workflow-step:not(:last-child)::after { width: 55%; left: 72%; } }
