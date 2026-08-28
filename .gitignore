@@ -1,39 +1,29 @@
-# Python
+.venv/
+venv/
 __pycache__/
 *.py[cod]
 *.pyo
-*.pyd
-*.egg-info/
 
-# Virtual Environment
-.venv/
-
-# Environment Variables
 .env
+.env.*
+!.env.example
 
-# Logs
 logs/*.log
-logs/*.json
+logs/*
+!logs/.gitkeep
 
-# IDE
-.vscode/
+classified.json
+vector_metrics.txt
+performance_results/
 
-# OS
-.DS_Store
-Thumbs.db
+action_api/main_backup.py
 
-# Testing
 .pytest_cache/
 .coverage
 htmlcov/
 
-# Python Cache
-.mypy_cache/
+.idea/
+.vscode/
 
-# Docker
-opensearch/data/
-
-# Misc
-*.tmp
-*.bakclassified.json
-.env
+.DS_Store
+Thumbs.db

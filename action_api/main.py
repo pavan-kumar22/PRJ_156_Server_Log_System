@@ -6,17 +6,19 @@ structured AICTE server logs into application.log.
 """
 
 from __future__ import annotations
-
+import os
+import threading
 import json
 import random
 import uuid
+import queue
+import time
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
-
 
 app = FastAPI(
     title="AICTE Demo Action API",
@@ -35,7 +37,61 @@ app.add_middleware(
 )
 
 LOG_FILE = Path("/var/log/aicte/application.log")
+LOG_FILE.parent.mkdir(parents=True, exist_ok=True)
 
+_LOG_FD = os.open(
+    str(LOG_FILE),
+    os.O_WRONLY | os.O_CREAT | os.O_APPEND,
+    0o666,
+)
+
+_LOG_QUEUE = queue.Queue(maxsize=10000)
+
+
+def _log_writer():
+    while True:
+        try:
+            first = _LOG_QUEUE.get()
+
+            batch = [first]
+
+            # Collect additional events for a short batching window.
+            deadline = time.monotonic() + 0.01
+
+            while len(batch) < 100 and time.monotonic() < deadline:
+                try:
+                    batch.append(_LOG_QUEUE.get_nowait())
+                except queue.Empty:
+                    time.sleep(0.0005)
+
+            data = "".join(
+                json.dumps(
+                    event,
+                    ensure_ascii=False,
+                    separators=(",", ":"),
+                ) + "\n"
+                for event in batch
+            )
+
+            os.write(
+                _LOG_FD,
+                data.encode("utf-8"),
+            )
+
+            for _ in batch:
+                _LOG_QUEUE.task_done()
+
+        except Exception as exc:
+            print(f"Log writer error: {exc}", flush=True)
+
+
+_LOG_WRITER_THREAD = threading.Thread(
+    target=_log_writer,
+    name="log-writer",
+    daemon=True,
+)
+
+_LOG_WRITER_THREAD.start()
 
 class ActionRequest(BaseModel):
     action: str
@@ -482,7 +538,7 @@ def available_actions() -> dict[str, list[str]]:
 
 
 @app.post("/api/action")
-def execute_action(request: ActionRequest) -> dict[str, Any]:
+async def execute_action(request: ActionRequest) -> dict[str, Any]:
 
     action = request.action.strip().lower()
 
@@ -504,19 +560,6 @@ def execute_action(request: ActionRequest) -> dict[str, Any]:
         parents=True,
         exist_ok=True,
     )
-
-    with LOG_FILE.open(
-        "a",
-        encoding="utf-8",
-    ) as file:
-
-        file.write(
-            json.dumps(
-                log_event,
-                ensure_ascii=False,
-            )
-            + "\n"
-        )
 
     return {
         "status": "accepted",
